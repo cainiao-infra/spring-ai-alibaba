@@ -77,7 +77,7 @@ public class DynamicAgentLoader implements IDynamicAgentLoader {
 	}
 
 	public List<DynamicAgentEntity> getAllAgents() {
-		return repository.findAll()
+		return repository.findAllByNamespace(namespace)
 			.stream()
 			.filter(entity -> Objects.equals(entity.getNamespace(), namespace))
 			.toList();
