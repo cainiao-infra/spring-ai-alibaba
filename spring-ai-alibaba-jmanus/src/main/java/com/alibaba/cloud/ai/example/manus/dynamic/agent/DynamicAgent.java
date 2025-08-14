@@ -187,6 +187,9 @@ public class DynamicAgent extends ReActAgent {
 			else {
 				chatClient = llmService.getDynamicChatClient(model);
 			}
+			log.info("available tools : {}", callbacks.stream().map(ele -> {
+				return ele.getToolDefinition().name();
+			}).collect(Collectors.toList()));
 			// Use streaming response handler for better user experience and content
 			// merging
 			Flux<ChatResponse> responseFlux = chatClient.prompt(userPrompt)

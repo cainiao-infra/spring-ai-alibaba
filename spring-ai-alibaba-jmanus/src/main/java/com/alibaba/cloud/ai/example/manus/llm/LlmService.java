@@ -20,6 +20,7 @@ import com.alibaba.cloud.ai.example.manus.dynamic.model.entity.DynamicModelEntit
 import com.alibaba.cloud.ai.example.manus.dynamic.model.repository.DynamicModelRepository;
 import com.alibaba.cloud.ai.example.manus.event.JmanusListener;
 import com.alibaba.cloud.ai.example.manus.event.ModelChangeEvent;
+import com.alibaba.cloud.ai.example.manus.log.SreSimpleLoggerAdvisor;
 import io.micrometer.observation.ObservationRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,7 +234,7 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 			.build();
 		ChatClient client = ChatClient.builder(openAiChatModel)
 			// .defaultAdvisors(MessageChatMemoryAdvisor.builder(agentMemory).build())
-			.defaultAdvisors(new SimpleLoggerAdvisor())
+			.defaultAdvisors(new SreSimpleLoggerAdvisor())
 			.defaultOptions(OpenAiChatOptions.builder().internalToolExecutionEnabled(false).build())
 			.build();
 		clients.put(modelId, client);

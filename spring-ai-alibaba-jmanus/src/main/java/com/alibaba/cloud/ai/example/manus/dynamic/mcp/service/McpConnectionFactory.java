@@ -139,7 +139,9 @@ public class McpConnectionFactory {
 
 				logger.info("MCP transport configured successfully for: {} (attempt {})", mcpServerName, attempt);
 
-				AsyncMcpToolCallbackProvider callbackProvider = new AsyncMcpToolCallbackProvider(mcpAsyncClient);
+				// AsyncMcpToolCallbackProvider callbackProvider = new
+				// AsyncMcpToolCallbackProvider(mcpAsyncClient);
+				AsyncMcpToolCallbackProvider callbackProvider = new CachedAsyncMcpToolCallbackProvider(mcpAsyncClient);
 				return new McpServiceEntity(mcpAsyncClient, callbackProvider, mcpServerName);
 			}
 			catch (Exception e) {
