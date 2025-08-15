@@ -3,6 +3,7 @@ package com.alibaba.cloud.ai.example.manus.dynamic.mcp.service;
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.util.Assert;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.mcp.AsyncMcpToolCallback;
@@ -17,6 +18,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 public class CachedAsyncMcpToolCallbackProvider extends AsyncMcpToolCallbackProvider {
 
@@ -28,6 +30,8 @@ public class CachedAsyncMcpToolCallbackProvider extends AsyncMcpToolCallbackProv
 
 	private static ToolCallback[] cachedToolCallbacks = null;
 
+	private String mcpServerKeys = null;
+
 	public CachedAsyncMcpToolCallbackProvider(BiPredicate<McpAsyncClient, McpSchema.Tool> toolFilter,
 			List<McpAsyncClient> mcpClients) {
 		Assert.notNull(mcpClients, "MCP clients must not be null");
@@ -35,21 +39,33 @@ public class CachedAsyncMcpToolCallbackProvider extends AsyncMcpToolCallbackProv
 		this.mcpClients = mcpClients;
 		this.toolFilter = toolFilter;
 
+		this.mcpServerKeys = mcpServerKeys = StringUtils.join(mcpClients.stream().map(ele -> {
+			return ele.getClientInfo().name();
+		}).collect(Collectors.toList()), ",");
+
 		initToolCallbacksCache();
 	}
 
 	private void initToolCallbacksCache() {
-		logger.info("initToolCallbacksCache times : {}", new Date());
+		if (McpToolCallbackSchedulePool.hasTask(mcpServerKeys)) {
+			return;
+		}
+		Boolean oldVal = McpToolCallbackSchedulePool.registerTask(mcpServerKeys);
+		if (oldVal != null) {
+			return;
+		}
+		logger.info("start initToolCallbacksCache times : {}, mcpServerKeys : {}", new Date(), mcpServerKeys);
 		McpToolCallbackSchedulePool.getPool().scheduleWithFixedDelay(() -> {
 			try {
 				ToolCallback[] tempCachedToolCallbacks = getToolCallbacksInner();
 				if (tempCachedToolCallbacks != null && tempCachedToolCallbacks.length > 0) {
-					logger.info("load tool callbacks cache success, size : {}", tempCachedToolCallbacks.length);
+					logger.info("{}, load tool callbacks cache success, size : {}", mcpServerKeys,
+							tempCachedToolCallbacks.length);
 					cachedToolCallbacks = tempCachedToolCallbacks;
 				}
 			}
 			catch (Exception e) {
-				logger.error("load tool callbacks cache error", e);
+				logger.error("{}, load tool callbacks cache error", mcpServerKeys, e);
 			}
 
 		}, 15, 60, java.util.concurrent.TimeUnit.SECONDS);
