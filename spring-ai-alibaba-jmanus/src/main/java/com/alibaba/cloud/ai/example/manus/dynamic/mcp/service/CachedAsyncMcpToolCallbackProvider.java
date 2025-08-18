@@ -68,7 +68,7 @@ public class CachedAsyncMcpToolCallbackProvider extends AsyncMcpToolCallbackProv
 				logger.error("{}, load tool callbacks cache error", mcpServerKeys, e);
 			}
 
-		}, 15, 60, java.util.concurrent.TimeUnit.SECONDS);
+		}, 15, 600, java.util.concurrent.TimeUnit.SECONDS);
 	}
 
 	/**
