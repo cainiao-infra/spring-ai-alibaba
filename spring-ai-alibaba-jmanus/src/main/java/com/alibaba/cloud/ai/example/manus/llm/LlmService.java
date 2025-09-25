@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.observation.ChatClientObservationConvention;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
@@ -83,7 +84,10 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 	private ObjectProvider<ObservationRegistry> observationRegistry;
 
 	@Autowired
-	private ObjectProvider<ChatModelObservationConvention> observationConvention;
+	private ObjectProvider<ChatModelObservationConvention> modelObservationConvention;
+
+    @Autowired
+    private ObjectProvider<ChatClientObservationConvention> clientObservationConvention;
 
 	@Autowired
 	private ObjectProvider<ToolExecutionEligibilityPredicate> openAiToolExecutionEligibilityPredicate;
@@ -141,6 +145,7 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 			optionsBuilder.topP(model.getTopP());
 		}
 
+        optionsBuilder.streamUsage(true);
 		OpenAiChatOptions defaultOptions = optionsBuilder.build();
 
 		if (this.planningChatClient == null) {
@@ -224,6 +229,7 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 			chatOptionsBuilder.topP(model.getTopP());
 		}
 
+        chatOptionsBuilder.streamUsage(true);
 		OpenAiChatOptions chatOptions = chatOptionsBuilder.build();
 		if (headers != null) {
 			chatOptions.setHttpHeaders(headers);
@@ -231,8 +237,11 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 		OpenAiChatModel openAiChatModel = OpenAiChatModel.builder()
 			.openAiApi(openAiApi)
 			.defaultOptions(chatOptions)
+            .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
 			.build();
-		ChatClient client = ChatClient.builder(openAiChatModel)
+        modelObservationConvention.ifAvailable(openAiChatModel::setObservationConvention);
+		ChatClient client = ChatClient.builder(openAiChatModel, observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
+                        clientObservationConvention.getIfAvailable())
 			// .defaultAdvisors(MessageChatMemoryAdvisor.builder(agentMemory).build())
 			.defaultAdvisors(new SimpleLoggerAdvisor())
 			.defaultOptions(OpenAiChatOptions.builder().internalToolExecutionEnabled(false).build())
@@ -320,7 +329,8 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 	private ChatClient buildPlanningChatClient(DynamicModelEntity dynamicModelEntity,
 			OpenAiChatOptions defaultOptions) {
 		OpenAiChatModel chatModel = openAiChatModel(dynamicModelEntity, defaultOptions);
-		return ChatClient.builder(chatModel)
+		return ChatClient.builder(chatModel, observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
+                        clientObservationConvention.getIfAvailable())
 			.defaultAdvisors(new SimpleLoggerAdvisor())
 			.defaultOptions(OpenAiChatOptions.fromOptions(defaultOptions))
 			.build();
@@ -330,7 +340,8 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 			OpenAiChatOptions defaultOptions) {
 		defaultOptions.setInternalToolExecutionEnabled(false);
 		OpenAiChatModel chatModel = openAiChatModel(dynamicModelEntity, defaultOptions);
-		return ChatClient.builder(chatModel)
+		return ChatClient.builder(chatModel, observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
+                        clientObservationConvention.getIfAvailable())
 			// .defaultAdvisors(MessageChatMemoryAdvisor.builder(agentMemory).build())
 			.defaultAdvisors(new SimpleLoggerAdvisor())
 			.defaultOptions(OpenAiChatOptions.fromOptions(defaultOptions))
@@ -340,7 +351,8 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 	private ChatClient buildFinalizeChatClient(DynamicModelEntity dynamicModelEntity,
 			OpenAiChatOptions defaultOptions) {
 		OpenAiChatModel chatModel = openAiChatModel(dynamicModelEntity, defaultOptions);
-		return ChatClient.builder(chatModel)
+		return ChatClient.builder(chatModel, observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP),
+                        clientObservationConvention.getIfAvailable())
 			// .defaultAdvisors(MessageChatMemoryAdvisor.builder(conversationMemory).build())
 			.defaultAdvisors(new SimpleLoggerAdvisor())
 			.build();
@@ -373,7 +385,7 @@ public class LlmService implements ILlmService, JmanusListener<ModelChangeEvent>
 			.observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
 			.build();
 
-		observationConvention.ifAvailable(chatModel::setObservationConvention);
+		modelObservationConvention.ifAvailable(chatModel::setObservationConvention);
 
 		return chatModel;
 	}
