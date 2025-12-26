@@ -62,6 +62,7 @@ import com.alibaba.cloud.ai.example.manus.planning.finalizer.PlanFinalizer;
 import com.alibaba.cloud.ai.example.manus.recorder.PlanExecutionRecorder;
 import com.alibaba.cloud.ai.example.manus.tool.DocLoaderTool;
 import com.alibaba.cloud.ai.example.manus.tool.FormInputTool;
+import com.alibaba.cloud.ai.example.manus.tool.IdeaLabTool;
 import com.alibaba.cloud.ai.example.manus.tool.PlanningTool;
 import com.alibaba.cloud.ai.example.manus.tool.PlanningToolInterface;
 import com.alibaba.cloud.ai.example.manus.tool.TerminateTool;
@@ -267,7 +268,8 @@ public class PlanningFactory implements IPlanningFactory {
 				.add(new ReduceOperationTool(planId, manusProperties, sharedStateManager, unifiedDirectoryManager));
 			toolDefinitions.add(new FinalizeTool(planId, manusProperties, sharedStateManager, unifiedDirectoryManager));
 			toolDefinitions.add(new CronTool(cronService, objectMapper));
-		}
+            toolDefinitions.add(new IdeaLabTool());
+        }
 		else {
 			toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo));
 		}
