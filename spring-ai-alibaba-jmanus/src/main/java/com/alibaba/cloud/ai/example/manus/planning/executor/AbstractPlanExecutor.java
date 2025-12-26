@@ -144,7 +144,7 @@ public abstract class AbstractPlanExecutor implements PlanExecutorInterface {
 			if (agent.getAgentName().equalsIgnoreCase(stepType)) {
 				BaseAgent executor = agentService.createDynamicBaseAgent(agent.getAgentName(),
 						context.getPlan().getCurrentPlanId(), context.getPlan().getRootPlanId(), initSettings,
-						expectedReturnInfo);
+						expectedReturnInfo,context.getToolsContext());
 				// Set thinkActRecordId from context for sub-plan executions
 				if (context.getThinkActRecordId() != null) {
 					executor.setThinkActRecordId(context.getThinkActRecordId());

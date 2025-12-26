@@ -33,7 +33,7 @@ public interface IDynamicAgentLoader {
 	 * @param initialAgentSetting Initial Agent settings
 	 * @return Dynamic Agent
 	 */
-	DynamicAgent loadAgent(String agentName, Map<String, Object> initialAgentSetting);
+	DynamicAgent loadAgent(String agentName, Map<String, Object> initialAgentSetting,Map<String, String> toolsContext);
 
 	/**
 	 * Get all Agents
