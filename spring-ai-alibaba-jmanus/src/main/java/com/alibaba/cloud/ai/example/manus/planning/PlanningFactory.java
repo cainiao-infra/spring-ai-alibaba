@@ -268,10 +268,11 @@ public class PlanningFactory implements IPlanningFactory {
 				.add(new ReduceOperationTool(planId, manusProperties, sharedStateManager, unifiedDirectoryManager));
 			toolDefinitions.add(new FinalizeTool(planId, manusProperties, sharedStateManager, unifiedDirectoryManager));
 			toolDefinitions.add(new CronTool(cronService, objectMapper));
-            toolDefinitions.add(new IdeaLabTool());
-        }
+			toolDefinitions.add(new IdeaLabTool());
+		}
 		else {
 			toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo));
+            toolDefinitions.add(new IdeaLabTool());
 		}
 
 		List<McpServiceEntity> functionCallbacks = mcpService.getFunctionCallbacks(planId);
