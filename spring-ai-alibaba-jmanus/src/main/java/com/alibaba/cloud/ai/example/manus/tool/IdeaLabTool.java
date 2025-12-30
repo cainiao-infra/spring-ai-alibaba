@@ -1,12 +1,14 @@
 package com.alibaba.cloud.ai.example.manus.tool;
 
 import com.alibaba.cloud.ai.example.manus.tool.code.ToolExecuteResult;
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.idealab.client.api.IdealabApi;
 import com.alibaba.idealab.client.api.model.ideas.IdealabRunIdeasRequest;
 import com.alibaba.idealab.client.api.model.ideas.IdealabRunIdeasResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.tool.function.FunctionToolCallback;
 
 /**
  * @author muhe.zz
@@ -14,157 +16,181 @@ import org.slf4j.LoggerFactory;
  */
 public class IdeaLabTool extends AbstractBaseTool<IdeaLabTool.IdeaLabToolInput> {
 
-    private static final String NAME = "ideaLabTool";
+	private static final String NAME = "ideaLabTool";
 
-    private static final Logger log = LoggerFactory.getLogger(IdeaLabTool.class);
+	private static final Logger log = LoggerFactory.getLogger(IdeaLabTool.class);
 
-    public IdeaLabTool() {
-    }
+	private static final String DESCRIPTION = "调用idealab，获取业务自定义Agent的返回结果";
 
-    public static class IdeaLabToolInput {
-        private String accessKey;
-        private String appCode;
-        private String appVersion;
-        private String userId;
-        private String question;
+	private static final String PARAMETERS = """
+			{
+			    "type": "object",
+			    "properties": {
+			        "accessKey": {
+			            "type": "string",
+			            "description": "请求API的密钥"
+			        },
+			        "appCode": {
+			            "type": "string",
+			            "description": "请求API的appCode"
+			        },
+			        "appVersion": {
+			            "type": "string",
+			            "description": "API的版本"
+			        },
+			        "userId": {
+			            "type": "string",
+			            "description": "访问的用户ID"
+			        },
+			        "question": {
+			            "type": "string",
+			            "description": "请求API的正文"
+			        }
+			    },
+			    "required": ["accessKey", "appCode", "appVersion", "userId", "question"]
+			}
+			""";
 
-        IdeaLabToolInput() {
-        }
+	public IdeaLabTool() {
+	}
 
-        IdeaLabToolInput(String accessKey, String appCode, String appVersion, String userId, String question) {
-            this.accessKey = accessKey;
-            this.appCode = appCode;
-            this.appVersion = appVersion;
-            this.userId = userId;
-            this.question = question;
-        }
+	public static class IdeaLabToolInput {
 
-        public String getAccessKey() {
-            return accessKey;
-        }
+		private String accessKey;
 
-        public void setAccessKey(String accessKey) {
-            this.accessKey = accessKey;
-        }
+		private String appCode;
 
-        public String getAppCode() {
-            return appCode;
-        }
+		private String appVersion;
 
-        public void setAppCode(String appCode) {
-            this.appCode = appCode;
-        }
+		private String userId;
 
-        public String getAppVersion() {
-            return appVersion;
-        }
+		private String question;
 
-        public void setAppVersion(String appVersion) {
-            this.appVersion = appVersion;
-        }
+		IdeaLabToolInput() {
+		}
 
-        public String getUserId() {
-            return userId;
-        }
+		IdeaLabToolInput(String accessKey, String appCode, String appVersion, String userId, String question) {
+			this.accessKey = accessKey;
+			this.appCode = appCode;
+			this.appVersion = appVersion;
+			this.userId = userId;
+			this.question = question;
+		}
 
-        public void setUserId(String userId) {
-            this.userId = userId;
-        }
+		public String getAccessKey() {
+			return accessKey;
+		}
 
-        public String getQuestion() {
-            return question;
-        }
+		public void setAccessKey(String accessKey) {
+			this.accessKey = accessKey;
+		}
 
-        public void setQuestion(String question) {
-            this.question = question;
-        }
-    }
+		public String getAppCode() {
+			return appCode;
+		}
 
-    @Override
-    public ToolExecuteResult run(IdeaLabToolInput input) {
-        IdealabApi idealabService = new IdealabApi(input.getAccessKey());
+		public void setAppCode(String appCode) {
+			this.appCode = appCode;
+		}
 
-        // 构造入参
-        IdealabRunIdeasRequest request = new IdealabRunIdeasRequest();
-        request.setAppCode(input.getAppCode());
-        request.setAppVersion(input.getAppVersion()); // 支持其他版本：latest 表示使用最新发布版本, dev 表示使用开发调试版本
-        request.setUserId(input.getUserId()); // 工号
-        //request.setSessionId(UUID.randomUUID().toString()); // 不填默认UUID
-        //request.setMessageId(UUID.randomUUID().toString()); // 不填默认traceId
-        request.setQuestion(input.getQuestion());
+		public String getAppVersion() {
+			return appVersion;
+		}
 
-        // 流式输出每一帧，如果是idealabApi.ideas() 是块式调用
-        IdealabRunIdeasResponse response = idealabService.ideasStream(request)
-            .doOnNext(line -> System.out.println(line.getContent()))
-            .blockLast();
+		public void setAppVersion(String appVersion) {
+			this.appVersion = appVersion;
+		}
 
-        if (null == response || null == response.getContent()) {
-            return new ToolExecuteResult("工具执行失败");
-        }
+		public String getUserId() {
+			return userId;
+		}
 
-        return new ToolExecuteResult(response.getContent());
-    }
+		public void setUserId(String userId) {
+			this.userId = userId;
+		}
 
-    @Override
-    public String getServiceGroup() {
-        return "default-service-group";
-    }
+		public String getQuestion() {
+			return question;
+		}
 
-    @Override
-    public String getName() {
-        return NAME;
-    }
+		public void setQuestion(String question) {
+			this.question = question;
+		}
 
-    @Override
-    public String getDescription() {
-        return "调用idealab，获取业务自定义Agent的返回结果";
-    }
+	}
 
-    @Override
-    public String getParameters() {
-        return """
-				{
-				    "type": "object",
-				    "properties": {
-				        "accessKey": {
-				            "type": "string",
-				            "description": "请求API的密钥"
-				        },
-				        "appCode": {
-				            "type": "string",
-				            "description": "请求API的appCode"
-				        },
-				        "appVersion": {
-				            "type": "string",
-				            "description": "API的版本"
-				        },
-				        "userId": {
-				            "type": "string",
-				            "description": "访问的用户ID"
-				        },
-				        "question": {
-				            "type": "string",
-				            "description": "请求API的正文"
-				        }
-				    },
-				    "required": ["accessKey", "appCode", "appVersion", "userId", "question"]
-				}
-				""";
-    }
+	@Override
+	public ToolExecuteResult run(IdeaLabToolInput input) {
+		IdealabApi idealabService = new IdealabApi(input.getAccessKey());
 
-    @Override
-    public Class<IdeaLabToolInput> getInputType() {
-        return IdeaLabToolInput.class;
-    }
+		// 构造入参
+		IdealabRunIdeasRequest request = new IdealabRunIdeasRequest();
+		request.setAppCode(input.getAppCode());
+		request.setAppVersion(input.getAppVersion()); // 支持其他版本：latest 表示使用最新发布版本, dev
+														// 表示使用开发调试版本
+		request.setUserId(input.getUserId()); // 工号
+		// request.setSessionId(UUID.randomUUID().toString()); // 不填默认UUID
+		// request.setMessageId(UUID.randomUUID().toString()); // 不填默认traceId
+		request.setQuestion(input.getQuestion());
 
-    @Override
-    public String getCurrentToolStateString() {
-        log.info("Invoke getCurrentToolStateString Method");
-        return "任务正在执行中......";
-    }
+		log.info("invoke ideaLabTool request: {}", JSON.toJSONString(request));
 
-    @Override
-    public void cleanup(String planId) {
-        log.info("Cleaned up resources for plan: {}", planId);
-    }
+		// 流式输出每一帧，如果是idealabApi.ideas() 是块式调用
+		IdealabRunIdeasResponse response = idealabService.ideasStream(request)
+			.doOnNext(line -> System.out.println(line.getContent()))
+			.blockLast();
+
+		if (null == response || null == response.getContent()) {
+			log.error("invoke ideaLabTool response is null");
+			return new ToolExecuteResult("工具执行失败");
+		}
+
+		log.info("invoke ideaLabTool response: {}", JSON.toJSONString(response));
+		return new ToolExecuteResult(response.getContent());
+	}
+
+	@Override
+	public String getServiceGroup() {
+		return "default-service-group";
+	}
+
+	@Override
+	public String getName() {
+		return NAME;
+	}
+
+	@Override
+	public String getDescription() {
+		return DESCRIPTION;
+	}
+
+	@Override
+	public String getParameters() {
+		return PARAMETERS;
+	}
+
+	@Override
+	public Class<IdeaLabToolInput> getInputType() {
+		return IdeaLabToolInput.class;
+	}
+
+	@Override
+	public String getCurrentToolStateString() {
+		log.info("Invoke getCurrentToolStateString Method");
+		return "任务正在执行中......";
+	}
+
+	@Override
+	public void cleanup(String planId) {
+		log.info("Cleaned up resources for plan: {}", planId);
+	}
+
+	public static FunctionToolCallback getFunctionToolCallback() {
+		return FunctionToolCallback.builder(NAME, new IdeaLabTool())
+			.description(DESCRIPTION)
+			.inputSchema(PARAMETERS)
+			.inputType(String.class)
+			.build();
+	}
+
 }
