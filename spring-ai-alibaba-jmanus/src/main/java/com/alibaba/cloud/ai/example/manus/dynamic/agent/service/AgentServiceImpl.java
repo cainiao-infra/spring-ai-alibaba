@@ -296,13 +296,13 @@ public class AgentServiceImpl implements AgentService {
 
 	@Override
 	public BaseAgent createDynamicBaseAgent(String name, String planId, String rootPlanId,
-			Map<String, Object> initialAgentSetting, String expectedReturnInfo,Map<String, String> toolsContext) {
+			Map<String, Object> initialAgentSetting, String expectedReturnInfo,Map<String, String> toolsContext,Map<String, Object> agentContext) {
 
 		log.info("Create new BaseAgent: {}, planId: {}", name, planId);
 
 		try {
 			// Load existing Agent through dynamicAgentLoader
-			DynamicAgent agent = dynamicAgentLoader.loadAgent(name, initialAgentSetting,toolsContext);
+			DynamicAgent agent = dynamicAgentLoader.loadAgent(name, initialAgentSetting,toolsContext, agentContext);
 
 			// Set planId
 			agent.setCurrentPlanId(planId);

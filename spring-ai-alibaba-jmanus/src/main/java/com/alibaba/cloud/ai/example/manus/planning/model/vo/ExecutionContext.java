@@ -35,6 +35,8 @@ public class ExecutionContext {
 
 	private Map<String, String> toolsContext = new HashMap<>();
 
+	private Map<String, Object> agentContext = new HashMap<>();
+
 	/**
 	 * Tool context for storing context information of tool execution
 	 */
@@ -222,4 +224,11 @@ public class ExecutionContext {
 		this.useMemory = useMemory;
 	}
 
+	public Map<String, Object> getAgentContext() {
+		return agentContext;
+	}
+
+	public void setAgentContext(Map<String, Object> agentContext) {
+		this.agentContext = agentContext;
+	}
 }

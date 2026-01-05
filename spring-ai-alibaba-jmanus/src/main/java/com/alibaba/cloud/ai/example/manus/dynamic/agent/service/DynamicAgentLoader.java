@@ -71,7 +71,7 @@ public class DynamicAgentLoader implements IDynamicAgentLoader {
 		this.streamingResponseHandler = streamingResponseHandler;
 	}
 
-	public DynamicAgent loadAgent(String agentName, Map<String, Object> initialAgentSetting,Map<String, String> toolsContext) {
+	public DynamicAgent loadAgent(String agentName, Map<String, Object> initialAgentSetting,Map<String, String> toolsContext,Map<String, Object> agentContext) {
 		DynamicAgentEntity entity = repository.findByNamespaceAndAgentName(namespace, agentName);
 		if (entity == null) {
 			throw new IllegalArgumentException("Agent not found: " + agentName);
