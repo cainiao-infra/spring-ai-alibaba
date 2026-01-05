@@ -272,7 +272,7 @@ public class PlanningFactory implements IPlanningFactory {
 		}
 		else {
 			toolDefinitions.add(new TerminateTool(planId, expectedReturnInfo));
-            toolDefinitions.add(new IdeaLabTool());
+			toolDefinitions.add(new IdeaLabTool());
 		}
 
 		List<McpServiceEntity> functionCallbacks = mcpService.getFunctionCallbacks(planId);
